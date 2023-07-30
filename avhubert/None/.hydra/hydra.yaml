@@ -107,14 +107,12 @@ hydra:
     hydra: []
     task:
     - common.user_dir=/home/minami/lip2sp_avhubert/avhubert
-    - task.data=/path/to/data
-    - task.label_dir=/path/to/label
   job:
     name: hydra_train
     override_dirname: common.user_dir-/home/minami/lip2sp_avhubert/avhubert
     id: ???
     num: ???
-    config_name: base_lrs3_iter1
+    config_name: test
     env_set: {}
     env_copy: []
     config:

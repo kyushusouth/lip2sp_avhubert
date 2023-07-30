@@ -8,7 +8,7 @@ common:
   tensorboard_logdir: null
   wandb_project: null
   azureml_logging: false
-  seed: 1337
+  seed: 7777
   cpu: false
   tpu: false
   bf16: false
@@ -45,15 +45,15 @@ common_eval:
   results_path: null
 distributed_training:
   _name: null
-  distributed_world_size: 32
+  distributed_world_size: 1
   distributed_num_procs: 1
   distributed_rank: 0
   distributed_backend: nccl
   distributed_init_method: null
-  distributed_port: 29671
+  distributed_port: -1
   device_id: 0
   distributed_no_spawn: false
-  ddp_backend: no_c10d
+  ddp_backend: pytorch_ddp
   ddp_comm_hook: none
   bucket_cap_mb: 25
   fix_batches_to_gpus: false
@@ -64,7 +64,7 @@ distributed_training:
   slowmo_momentum: null
   slowmo_algorithm: LocalSGD
   localsgd_frequency: 3
-  nprocs_per_node: 8
+  nprocs_per_node: 1
   pipeline_model_parallel: false
   pipeline_balance: null
   pipeline_devices: null
@@ -84,10 +84,10 @@ distributed_training:
   use_sharded_state: false
 dataset:
   _name: null
-  num_workers: 6
-  skip_invalid_size_inputs_valid_test: true
-  max_tokens: 1000
-  batch_size: null
+  num_workers: 20
+  skip_invalid_size_inputs_valid_test: false
+  max_tokens: null
+  batch_size: 8
   required_batch_size_multiple: 8
   required_seq_len_multiple: 1
   dataset_impl: null
@@ -96,8 +96,8 @@ dataset:
   valid_subset: valid
   combine_valid_subsets: null
   ignore_unused_valid_subsets: false
-  validate_interval: 5
-  validate_interval_updates: 10000
+  validate_interval: 1
+  validate_interval_updates: 0
   validate_after_updates: 0
   fixed_validation_seed: null
   disable_validation: false
@@ -118,7 +118,7 @@ optimization:
   update_freq:
   - 1
   lr:
-  - 0.0005
+  - 0.0001
   stop_min_lr: -1.0
   use_bmuf: false
 checkpoint:
@@ -132,13 +132,13 @@ checkpoint:
   reset_optimizer: false
   optimizer_overrides: '{}'
   save_interval: 1
-  save_interval_updates: 25000
+  save_interval_updates: 10
   keep_interval_updates: 1
   keep_interval_updates_pattern: -1
   keep_last_epochs: -1
   keep_best_checkpoints: -1
   no_save: false
-  no_epoch_checkpoints: true
+  no_epoch_checkpoints: false
   no_last_checkpoints: false
   no_save_optimizer_state: false
   best_checkpoint_metric: loss
@@ -209,54 +209,13 @@ interactive:
   buffer_size: 0
   input: '-'
 model:
-  _name: av_hubert
-  label_rate: 100
-  skip_masked: false
-  skip_nomask: false
-  modality_dropout: 0
-  audio_dropout: 0.5
-  modality_fuse: concat
-  selection_type: same_seq
-  masking_type: feature
-  mask_prob_image: 0.8
-  mask_length_image: 10
-  mask_prob_audio: 0.8
-  mask_length_audio: 10
-  extractor_mode: default
-  final_dim: 256
-  encoder_layerdrop: 0.05
-  dropout_input: 0.1
-  dropout_features: 0.1
-  dropout: 0.1
-  attention_dropout: 0.1
-  feature_grad_mult: 0.1
-  untie_final_proj: true
-  activation_dropout: 0.0
-  wav_input: false
-  layer_norm_first: true
-  audio_feat_dim: 104
+  _name: lip2sp
+  out_channels: 80
 task:
-  _name: av_hubert_pretraining
-  data: /path/to/data
-  label_dir: /path/to/label
-  labels:
-  - mfcc
-  label_rate: ${model.label_rate}
-  sample_rate: 25
-  max_sample_size: 500
-  min_sample_size: 5
-  pad_audio: true
-  random_crop: false
-  normalize: true
-  stack_order_audio: 4
-  input_modality: image
-  image_aug: true
+  _name: lip2sp_training
+  data_path: /home/minami/dataset/lip/np_files/face_cropped_max_size_fps25_0_25_gray/train/F01_kablab/mspec80
 criterion:
-  _name: av_hubert
-  pred_masked_weight: 1.0
-  pred_nomask_weight: 0.0
-  loss_weights:
-  - 10
+  _name: lip2sp
 optimizer:
   _name: adam
   adam_betas: (0.9,0.98)

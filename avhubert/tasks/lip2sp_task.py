@@ -14,8 +14,8 @@ from omegaconf import MISSING, II
 import numpy as np
 from argparse import Namespace
 
-sys.path.append(str(Path('~/lip2sp_av').expanduser()))
-from dataset import Lip2SpDataset
+sys.path.append(str(Path('~/lip2sp_avhubert/avhubert').expanduser()))
+from lip2sp_dataset import Lip2SpDataset
 
 
 @dataclass

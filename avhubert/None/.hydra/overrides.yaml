@@ -1,0 +1,3 @@
+- common.user_dir=/home/minami/lip2sp_avhubert/avhubert
+- task.data=/path/to/data
+- task.label_dir=/path/to/label

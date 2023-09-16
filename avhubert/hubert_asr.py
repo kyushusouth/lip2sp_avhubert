@@ -418,7 +418,7 @@ class AVHubertSeq2Seq(FairseqEncoderDecoderModel):
     @classmethod
     def build_model(cls, cfg, task):
         """Build a new model instance."""
-
+        
         arg_overrides = {
             "dropout": cfg.dropout,
             "activation_dropout": cfg.activation_dropout,
@@ -459,7 +459,6 @@ class AVHubertSeq2Seq(FairseqEncoderDecoderModel):
             "Please check that --normalize is set or unset for "
             "both pre-training and here"
         )
-
         w2v_args.task.data = cfg.data
 
         task_pretrain = tasks.setup_task(w2v_args.task)

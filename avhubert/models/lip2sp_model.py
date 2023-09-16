@@ -29,15 +29,6 @@ class Lip2SpModel(BaseFairseqModel):
         cfg,
     ):
         super().__init__()
-        models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
-        model = models[0]
-        if hasattr(models[0], 'decoder'):
-            print(f"Checkpoint: fine-tuned")
-            model = models[0].encoder.w2v_model
-        else:
-            print(f"Checkpoint: pre-trained w/o fine-tuning")
-
-        out_layer = nn.Linear(768, )
 
     def upgrade_state_dict_named(self, state_dict, name):
         super().upgrade_state_dict_named(state_dict, name)
@@ -45,5 +36,12 @@ class Lip2SpModel(BaseFairseqModel):
     
     @classmethod
     def build_model(cls, cfg, task):
-        
-        return
+        ckpt_path = '/home/minami/av_hubert_data/base_vox_433h.pt'
+        models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
+        model = models[0]
+        if hasattr(models[0], 'decoder'):
+            print(f"Checkpoint: fine-tuned")
+            model = models[0].encoder.w2v_model
+        else:
+            print(f"Checkpoint: pre-trained w/o fine-tuning")
+        return model

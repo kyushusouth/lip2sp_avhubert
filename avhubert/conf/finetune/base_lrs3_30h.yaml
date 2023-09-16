@@ -25,7 +25,7 @@ distributed_training:
 task:
   _name: av_hubert_pretraining
   is_s2s: true
-  data: ???
+  data: '/home/minami/av_hubert_data'
   label_dir: ???
   tokenizer_bpe_model: ???
   normalize: true  # must be consistent with pre-training
@@ -73,7 +73,7 @@ lr_scheduler:
 
 model:
   _name: av_hubert_seq2seq
-  w2v_path: ???
+  w2v_path: '/home/minami/av_hubert_data/base_vox_433h.pt'
   apply_mask: false
   mask_selection: static
   mask_length: 10

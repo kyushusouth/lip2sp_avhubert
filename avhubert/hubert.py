@@ -379,6 +379,7 @@ class AVHubertModel(BaseFairseqModel):
 
         self.dropout_input = nn.Dropout(cfg.dropout_input)
         self.dropout_features = nn.Dropout(cfg.dropout_features)
+        # 'encoder.w2v_model.feature_extractor_audio.proj.weight'
 
         self.feature_grad_mult = cfg.feature_grad_mult
         self.logit_temp = cfg.logit_temp
@@ -691,7 +692,7 @@ class AVHubertModel(BaseFairseqModel):
         feature = res["features"] if ret_conv else res["x"]
         return feature, res["padding_mask"]
 
-    def extract_finetune(self, source, padding_mask=None, mask=False, ret_conv=False, output_layer=None):
+    def extract_finetune(self, source, padding_mask=None, mask=False, ret_conv=False, output_layer=None, return_res_output=False):
         src_audio, src_video = source['audio'], source['video']
         if mask and self.masking_type == 'input':
             src_video, mask_indices_video = self.apply_input_mask(src_video, padding_mask, target_list=None)
@@ -700,6 +701,7 @@ class AVHubertModel(BaseFairseqModel):
         else:
             src_audio, src_video, mask_indices = src_audio, src_video, None
 
+        # resnet
         if src_audio is not None and src_video is None:
             features_audio = self.forward_features(src_audio, modality='audio') # features: [B, F, T]
             features_video = features_audio.new_zeros(features_audio.size(0), self.encoder_embed_dim, features_audio.size(-1))
@@ -726,6 +728,7 @@ class AVHubertModel(BaseFairseqModel):
         if self.post_extract_proj is not None:
             features = self.post_extract_proj(features)
 
+        res_output = features
         features = self.dropout_input(features)
         unmasked_features = self.dropout_features(unmasked_features)
         x = features
@@ -736,13 +739,16 @@ class AVHubertModel(BaseFairseqModel):
         # x: (B, T, D), float
         # padding_mask: (B, T), bool
         # mask_indices: (B, T), bool
+        # transformer
         x, _ = self.encoder(
             x,
             padding_mask=padding_mask,
             layer=None if output_layer is None else output_layer - 1
         )
-
-        return x, padding_mask
+        if return_res_output:
+            return x, padding_mask, res_output
+        else:
+            return x, padding_mask
 
 
     def get_extra_losses(self, net_output):

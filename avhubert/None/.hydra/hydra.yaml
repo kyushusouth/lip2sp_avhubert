@@ -112,7 +112,7 @@ hydra:
     override_dirname: common.user_dir-/home/minami/lip2sp_avhubert/avhubert
     id: ???
     num: ???
-    config_name: test
+    config_name: base_lrs3_30h
     env_set: {}
     env_copy: []
     config:
@@ -123,6 +123,11 @@ hydra:
         - run
         - task.data
         - task.label_dir
+        - model.w2v_path
+        - dataset.train_subset
+        - dataset.valid_subset
+        - criterion.wer_kenlm_model
+        - criterion.wer_lexicon
   runtime:
     version: 1.0.7
     cwd: /home/minami/lip2sp_avhubert/avhubert

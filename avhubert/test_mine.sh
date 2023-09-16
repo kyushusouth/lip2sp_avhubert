@@ -1,4 +1,4 @@
 fairseq-hydra-train  \
-  --config-dir ./conf/lip2sp \
-  --config-name test \
+  --config-dir ./conf/finetune \
+  --config-name base_lrs3_30h \
   common.user_dir=`pwd`

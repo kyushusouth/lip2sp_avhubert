@@ -5,10 +5,10 @@ common:
   log_interval: 200
   log_format: json
   log_file: null
-  tensorboard_logdir: null
+  tensorboard_logdir: tblog
   wandb_project: null
   azureml_logging: false
-  seed: 7777
+  seed: 1337
   cpu: false
   tpu: false
   bf16: false
@@ -27,7 +27,7 @@ common:
   amp_init_scale: 128
   amp_scale_window: null
   user_dir: /home/minami/lip2sp_avhubert/avhubert
-  empty_cache_freq: 10000
+  empty_cache_freq: 0
   all_gather_list_size: 16384
   model_parallel_size: 1
   quantization_config_path: null
@@ -45,26 +45,26 @@ common_eval:
   results_path: null
 distributed_training:
   _name: null
-  distributed_world_size: 1
+  distributed_world_size: 8
   distributed_num_procs: 1
   distributed_rank: 0
   distributed_backend: nccl
   distributed_init_method: null
-  distributed_port: -1
+  distributed_port: 29671
   device_id: 0
   distributed_no_spawn: false
-  ddp_backend: pytorch_ddp
+  ddp_backend: c10d
   ddp_comm_hook: none
   bucket_cap_mb: 25
   fix_batches_to_gpus: false
-  find_unused_parameters: false
+  find_unused_parameters: true
   fast_stat_sync: false
   heartbeat_timeout: -1
   broadcast_buffers: false
   slowmo_momentum: null
   slowmo_algorithm: LocalSGD
   localsgd_frequency: 3
-  nprocs_per_node: 1
+  nprocs_per_node: 8
   pipeline_model_parallel: false
   pipeline_balance: null
   pipeline_devices: null
@@ -84,10 +84,10 @@ distributed_training:
   use_sharded_state: false
 dataset:
   _name: null
-  num_workers: 20
+  num_workers: 6
   skip_invalid_size_inputs_valid_test: false
-  max_tokens: null
-  batch_size: 8
+  max_tokens: 1000
+  batch_size: null
   required_batch_size_multiple: 8
   required_seq_len_multiple: 1
   dataset_impl: null
@@ -96,7 +96,7 @@ dataset:
   valid_subset: valid
   combine_valid_subsets: null
   ignore_unused_valid_subsets: false
-  validate_interval: 1
+  validate_interval: 2
   validate_interval_updates: 0
   validate_after_updates: 0
   fixed_validation_seed: null
@@ -111,14 +111,14 @@ dataset:
 optimization:
   _name: null
   max_epoch: 0
-  max_update: 400000
+  max_update: 30000
   stop_time_hours: 0.0
-  clip_norm: 10.0
-  sentence_avg: false
+  clip_norm: 0.0
+  sentence_avg: true
   update_freq:
   - 1
   lr:
-  - 0.0001
+  - 0.001
   stop_min_lr: -1.0
   use_bmuf: false
 checkpoint:
@@ -131,18 +131,18 @@ checkpoint:
   reset_meters: false
   reset_optimizer: false
   optimizer_overrides: '{}'
-  save_interval: 1
-  save_interval_updates: 10
+  save_interval: 2
+  save_interval_updates: 0
   keep_interval_updates: 1
   keep_interval_updates_pattern: -1
   keep_last_epochs: -1
   keep_best_checkpoints: -1
   no_save: false
-  no_epoch_checkpoints: false
+  no_epoch_checkpoints: true
   no_last_checkpoints: false
   no_save_optimizer_state: false
-  best_checkpoint_metric: loss
-  maximize_best_checkpoint_metric: false
+  best_checkpoint_metric: accuracy
+  maximize_best_checkpoint_metric: true
   patience: -1
   checkpoint_suffix: ''
   checkpoint_shard_count: 1
@@ -209,21 +209,62 @@ interactive:
   buffer_size: 0
   input: '-'
 model:
-  _name: lip2sp
-  out_channels: 80
+  _name: av_hubert_seq2seq
+  w2v_path: /home/minami/av_hubert_data/base_vox_433h.pt
+  apply_mask: false
+  mask_selection: static
+  mask_length: 10
+  mask_other: 0
+  mask_prob: 0.75
+  mask_channel_selection: static
+  mask_channel_length: 64
+  mask_channel_other: 0
+  mask_channel_prob: 0.5
+  layerdrop: 0.1
+  dropout: 0.0
+  activation_dropout: 0.1
+  attention_dropout: 0.0
+  feature_grad_mult: 1.0
+  decoder_layers: 6
+  decoder_dropout: 0.1
+  decoder_attention_dropout: 0.0
+  decoder_activation_dropout: 0.1
+  freeze_finetune_updates: 30000
+  share_decoder_input_output_embed: true
+  decoder_normalize_before: true
 task:
-  _name: lip2sp_training
-  data_path: /home/minami/dataset/lip/np_files/face_cropped_max_size_fps25_0_25_gray/train/F01_kablab/mspec80
+  _name: av_hubert_pretraining
+  is_s2s: true
+  data: /home/minami/av_hubert_data
+  label_dir: ???
+  tokenizer_bpe_model: ???
+  normalize: true
+  labels:
+  - wrd
+  single_target: true
+  fine_tuning: true
+  stack_order_audio: 4
+  tokenizer_bpe_name: sentencepiece
+  max_sample_size: 500
+  modalities:
+  - video
+  image_aug: true
+  pad_audio: true
+  random_crop: false
 criterion:
-  _name: lip2sp
+  _name: label_smoothed_cross_entropy
+  report_accuracy: true
+  label_smoothing: 0.1
 optimizer:
   _name: adam
   adam_betas: (0.9,0.98)
-  adam_eps: 1.0e-06
-  weight_decay: 0.01
+  adam_eps: 1.0e-08
 lr_scheduler:
-  _name: polynomial_decay
-  warmup_updates: 32000
+  _name: tri_stage
+  warmup_steps: 10000
+  hold_steps: 0
+  decay_steps: 20000
+  final_lr_scale: 0.05
 scoring: null
 bpe: null
 tokenizer: null

@@ -29,16 +29,6 @@ def count_params(module, attr):
     print(f"{attr}_parameter = {params}")
 
 
-def fix_model_state_dict(state_dict):
-    new_state_dict = OrderedDict()
-    for k, v in state_dict.items():
-        name = k
-        if name.startswith('module.'):
-            name = name[7:]  # remove 'module.' of dataparallel
-        new_state_dict[name] = v
-    return new_state_dict
-
-
 def extract_visual_feature(video_path, ckpt_path):
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
     transform = avhubert_utils.Compose([
@@ -68,7 +58,6 @@ def extract_visual_feature(video_path, ckpt_path):
     mymodel = MyAVHubertModel()
     state = checkpoint_utils.load_checkpoint_to_cpu(ckpt_path)
     pretrained_dict = state['model']
-    pretrained_dict = fix_model_state_dict(pretrained_dict)
     mymodel_dict = mymodel.state_dict()
     mymodel_dict = {'encoder.w2v_model.' + key: value for key, value in mymodel_dict.items()}
     match_dict = {k: v for k, v in pretrained_dict.items() if k in mymodel_dict}
@@ -76,6 +65,7 @@ def extract_visual_feature(video_path, ckpt_path):
     mymodel.load_state_dict(match_dict, strict=True)
     mymodel.cuda()
     mymodel.eval()
+    count_params(mymodel, 'mymodel')
 
     with torch.no_grad():
         # Specify output_layer if you want to extract feature of an intermediate layer

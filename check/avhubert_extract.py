@@ -14,7 +14,7 @@ import inspect
 
 import hubert_asr
 
-from avhubert_load import MyAVHubertModel
+from avhubert_copied import MyAVHubertModel, Config
 from collections import OrderedDict
 
 
@@ -27,6 +27,26 @@ def count_params(module, attr):
         if p.requires_grad:
             params += p.numel()
     print(f"{attr}_parameter = {params}")
+
+
+def load_avhubert(ckpt_path, finetuned, model_size):
+    cfg = Config(model_size)
+    avhubert = MyAVHubertModel(cfg)
+    if finetuned:
+        state = torch.load(ckpt_path, map_location=torch.device("cpu"))
+        pretrained_dict = state['model']
+        avhubert_dict = avhubert.state_dict()
+        avhubert_dict = {'encoder.w2v_model.' + key: value for key, value in avhubert_dict.items()}
+        match_dict = {k: v for k, v in pretrained_dict.items() if k in avhubert_dict}
+        match_dict = {key.replace('encoder.w2v_model.', ''): value for key, value in match_dict.items()}
+        avhubert.load_state_dict(match_dict, strict=True)
+    else:
+        state = torch.load(ckpt_path, map_location=torch.device("cpu"))
+        pretrained_dict = state['model']
+        avhubert_dict = avhubert.state_dict()
+        match_dict = {k: v for k, v in pretrained_dict.items() if k in avhubert_dict}
+        avhubert.load_state_dict(match_dict, strict=True)
+    return avhubert
 
 
 def extract_visual_feature(video_path, ckpt_path):
@@ -46,26 +66,15 @@ def extract_visual_feature(video_path, ckpt_path):
         model = models[0].encoder.w2v_model
     else:
         print(f"Checkpoint: pre-trained w/o fine-tuning")
-
-    count_params(model, 'model')
-    for x in inspect.getmembers(model, inspect.ismethod):
-        print(x[0])
-    
     model.cuda()
     model.eval()
 
-    # これでいける
-    mymodel = MyAVHubertModel()
-    state = checkpoint_utils.load_checkpoint_to_cpu(ckpt_path)
-    pretrained_dict = state['model']
-    mymodel_dict = mymodel.state_dict()
-    mymodel_dict = {'encoder.w2v_model.' + key: value for key, value in mymodel_dict.items()}
-    match_dict = {k: v for k, v in pretrained_dict.items() if k in mymodel_dict}
-    match_dict = {key.replace('encoder.w2v_model.', ''): value for key, value in match_dict.items()}
-    mymodel.load_state_dict(match_dict, strict=True)
+    mymodel = load_avhubert(ckpt_path, finetuned=False, model_size='base')
     mymodel.cuda()
     mymodel.eval()
-    count_params(mymodel, 'mymodel')
+    count_params(mymodel, 'avhubert')
+    count_params(mymodel.feature_extractor_video, 'feature_extractor_video')
+    count_params(mymodel.encoder, 'transformer_encoder')
 
     with torch.no_grad():
         # Specify output_layer if you want to extract feature of an intermediate layer
@@ -85,7 +94,9 @@ def extract_visual_feature(video_path, ckpt_path):
 
 def main():
     video_path = '/home/minami/av_hubert_data/roi.mp4'
-    ckpt_path = '/home/minami/av_hubert_data/base_vox_433h.pt'
+    # ckpt_path = '/home/minami/av_hubert_data/base_vox_433h.pt'      # finetuning
+    ckpt_path = '/home/minami/av_hubert_data/base_vox_iter5.pt'     # pretrained
+    # ckpt_path = '/home/minami/av_hubert_data/large_vox_iter5.pt'    # pretrained
     feature, res_output = extract_visual_feature(video_path, ckpt_path)
 
 

@@ -14,6 +14,55 @@ from copy import deepcopy
 logger = logging.getLogger(__name__)
 
 
+class Config:
+    def __init__(self, model_size):
+        if model_size == 'base':
+            self.resnet_relu_type = 'prelu'
+            self.resnet_weights = None
+            self.audio_feat_dim = 104
+            self.encoder_embed_dim = 768
+            self.dropout_input = 0.1
+            self.dropout_features = 0.1
+            self.modality_fuse = 'concat'
+            self.encoder_layers = 12
+            self.sub_encoder_layers = 0
+
+            # TransformerEncoder
+            self.dropout = 0.1
+            self.conv_pos = 128
+            self.conv_pos_groups = 16
+            self.encoder_ffn_embed_dim = 3072
+            self.encoder_attention_heads = 12
+            self.attention_dropout = 0.1
+            self.activation_dropout = 0.0
+            self.activation_fn = 'gelu'
+            self.layer_norm_first = True
+            self.encoder_layerdrop = 0.05
+
+        elif model_size == 'large':
+            self.resnet_relu_type = 'prelu'
+            self.resnet_weights = None
+            self.audio_feat_dim = 104
+            self.encoder_embed_dim = 1024
+            self.dropout_input = 0.1
+            self.dropout_features = 0.1
+            self.modality_fuse = 'concat'
+            self.encoder_layers = 24
+            self.sub_encoder_layers = 0
+
+            # TransformerEncoder
+            self.dropout = 0.1
+            self.conv_pos = 128
+            self.conv_pos_groups = 16
+            self.encoder_ffn_embed_dim = 4096
+            self.encoder_attention_heads = 16
+            self.attention_dropout = 0.1
+            self.activation_dropout = 0.0
+            self.activation_fn = 'gelu'
+            self.layer_norm_first = True
+            self.encoder_layerdrop = 0.05
+
+
 def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
@@ -1129,39 +1178,14 @@ class SubModel(nn.Module):
         else:
             x = x.transpose(1, 2)
         return x
-    
-
-class Config:
-    def __init__(self):
-        self.resnet_relu_type = 'prelu'
-        self.resnet_weights = None
-        self.audio_feat_dim = 104
-        self.encoder_embed_dim = 768
-        self.dropout_input = 0.1
-        self.dropout_features = 0.1
-        self.modality_fuse = 'concat'
-        self.encoder_layers = 12
-        self.sub_encoder_layers = 0
-
-        # TransformerEncoder
-        self.dropout = 0.1
-        self.conv_pos = 128
-        self.conv_pos_groups = 16
-        self.encoder_ffn_embed_dim = 3072
-        self.encoder_attention_heads = 12
-        self.attention_dropout = 0.1
-        self.activation_dropout = 0.0
-        self.activation_fn = 'gelu'
-        self.layer_norm_first = True
-        self.encoder_layerdrop = 0.05
 
 
 class MyAVHubertModel(nn.Module):
     def __init__(
         self,
+        cfg,
     ):
         super().__init__()
-        cfg = Config()
         sub_cfg = deepcopy(cfg)
         sub_cfg.encoder_layers = sub_cfg.sub_encoder_layers
         resnet = ResEncoder(relu_type=cfg.resnet_relu_type, weights=cfg.resnet_weights)

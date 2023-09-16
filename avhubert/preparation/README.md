@@ -6,7 +6,6 @@ This folder contains scripts for data preparation for LRS3 and VoxCeleb2 dataset
 To preprocess, you need some additional packages:
 ```
 pip install -r requirements.txt
-```
 
 ## LRS3 Preprocessing
 

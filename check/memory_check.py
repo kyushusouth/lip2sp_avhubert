@@ -1,21 +1,5 @@
-import sys
-from pathlib import Path
-sys.path.append(str(Path('~/lip2sp_avhubert/avhubert').expanduser()))
-
-import cv2
-import tempfile
 import torch
-import utils as avhubert_utils
-from argparse import Namespace
-import fairseq
-from fairseq import checkpoint_utils, options, tasks, utils
-from IPython.display import HTML
-import inspect
-
-import hubert_asr
-
 from avhubert_copied import MyAVHubertModel, Config
-from collections import OrderedDict
 
 
 def load_avhubert(ckpt_path, finetuned, model_size):
@@ -39,17 +23,30 @@ def load_avhubert(ckpt_path, finetuned, model_size):
 
 
 def main():
-    # ckpt_path = '/home/minami/av_hubert_data/base_vox_433h.pt'      # finetuning
     ckpt_path = '/home/minami/av_hubert_data/base_vox_iter5.pt'     # pretrained
-    # ckpt_path = '/home/minami/av_hubert_data/large_vox_iter5.pt'    # pretrained
-
     avhubert = load_avhubert(ckpt_path, finetuned=False, model_size='base')
+    optimizer = torch.optim.Adam(
+        params=avhubert.parameters(),
+        lr=0.001, 
+        betas=(0.9, 0.98),
+        weight_decay=1.0e-2,   
+    )
+    avhubert.cuda()
+    avhubert.train()
 
-    ckpt_path_new = Path(ckpt_path)
-    new_filename = ckpt_path_new.stem + '_torch'
-    ckpt_path_new = str(ckpt_path_new).replace(ckpt_path_new.stem, new_filename).replace(ckpt_path_new.suffix, '.ckpt')
-    torch.save({'avhubert': avhubert.state_dict(),}, ckpt_path_new)
-    
+    for i in range(100):
+        print(i)
+        batch_size = 8
+        t = 250
+        hw = 88
+        dummy_data = torch.rand(batch_size, 1, t, hw, hw).cuda()
+        feature = avhubert(dummy_data, padding_mask=None, return_res_output=True)
+        dummy_feature = torch.rand_like(feature)
+        loss = torch.mean((feature - dummy_feature) ** 2)
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
 
 if __name__ == '__main__':
     main()

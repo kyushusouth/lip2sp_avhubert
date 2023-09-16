@@ -1223,8 +1223,8 @@ class MyAVHubertModel(nn.Module):
         self,
         x,
         padding_mask,
-        output_layer,
         return_res_output,
+        output_layer=None,
     ):
         features_video = self.feature_extractor_video(x)
         features_audio = features_video.new_zeros(features_video.size(0), self.encoder_embed_dim, features_video.size(-1))
@@ -1241,22 +1241,19 @@ class MyAVHubertModel(nn.Module):
         if self.post_extract_proj is not None:
             features = self.post_extract_proj(features)
 
-        res_output = features
-        features = self.dropout_input(features)
-        x = features
-
-        # feature: (B, T, D), float
-        # target: (B, T), long
-        # x: (B, T, D), float
-        # padding_mask: (B, T), bool
-        # mask_indices: (B, T), bool
-        # transformer
-        x, _ = self.encoder(
-            x,
-            padding_mask=padding_mask,
-            layer=None if output_layer is None else output_layer - 1
-        )
         if return_res_output:
-            return x, padding_mask, res_output
+            return features     # (B, T, C)
         else:
-            return x, padding_mask
+            features = self.dropout_input(features)
+
+            # feature: (B, T, D), float
+            # target: (B, T), long
+            # padding_mask: (B, T), bool
+            # mask_indices: (B, T), bool
+            # transformer
+            features, _ = self.encoder(
+                features,
+                padding_mask=padding_mask,
+                layer=None if output_layer is None else output_layer - 1
+            )
+            return features     # (B, T, C)

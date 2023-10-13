@@ -1,0 +1,3 @@
+# AVHuBERTを利用する際に、fairseqのチェックポイントからpytorchのチェックポイントに変換するためのプログラム
+
+`check/avhubert_save_params.py`を実行することによってpytorchのチェックポイントに変換して保存し直せる。

@@ -40,10 +40,10 @@ def load_avhubert(ckpt_path, finetuned, model_size):
 
 def main():
     # ckpt_path = '/home/minami/av_hubert_data/base_vox_433h.pt'      # finetuning
-    ckpt_path = '/home/minami/av_hubert_data/base_vox_iter5.pt'     # pretrained
-    # ckpt_path = '/home/minami/av_hubert_data/large_vox_iter5.pt'    # pretrained
+    # ckpt_path = '/home/minami/av_hubert_data/base_vox_iter5.pt'     # pretrained
+    ckpt_path = '/home/minami/av_hubert_data/large_vox_iter5.pt'    # pretrained
 
-    avhubert = load_avhubert(ckpt_path, finetuned=False, model_size='base')
+    avhubert = load_avhubert(ckpt_path, finetuned=False, model_size='large')
 
     ckpt_path_new = Path(ckpt_path)
     new_filename = ckpt_path_new.stem + '_torch'
